@@ -1,10 +1,12 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/sashabaranov/go-openai"
 	"github.com/twilio/twilio-go"
 	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
@@ -41,6 +43,27 @@ func main() {
 		panic(err)
 	}
 
+	openAiClient := openai.NewClient(env.OpenAiApiKey)
+	respp, err := openAiClient.CreateChatCompletion(
+		context.Background(),
+		openai.ChatCompletionRequest{
+			Model: openai.GPT3Dot5Turbo,
+			Messages: []openai.ChatCompletionMessage{
+				{
+					Role:    openai.ChatMessageRoleUser,
+					Content: "Hello!",
+				},
+			},
+		},
+	)
+
+	if err != nil {
+		fmt.Printf("ChatCompletion error: %v\n", err)
+		return
+	}
+
+	msg := respp.Choices[0].Message.Content
+
 	client := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: env.TwilioAccountSid,
 		Password: env.TwilioAuthToken,
@@ -51,7 +74,7 @@ func main() {
 	params.SetTo(to)
 	from := fmt.Sprintf("whatsapp:%s", env.TwilioSendFrom)
 	params.SetFrom(from)
-	params.SetBody("Hello from Go!")
+	params.SetBody(msg)
 
 	resp, err := client.Api.CreateMessage(params)
 	if err != nil {
