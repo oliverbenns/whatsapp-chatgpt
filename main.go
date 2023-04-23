@@ -1,14 +1,13 @@
 package main
 
 import (
-	"context"
-	"encoding/json"
 	"fmt"
 	"os"
 
+	"github.com/oliverbenns/whatsapp-chatgpt/internal/prompt"
+	"github.com/oliverbenns/whatsapp-chatgpt/internal/publish"
 	"github.com/sashabaranov/go-openai"
 	"github.com/twilio/twilio-go"
-	twilioApi "github.com/twilio/twilio-go/rest/api/v2010"
 )
 
 type Env struct {
@@ -44,43 +43,30 @@ func main() {
 	}
 
 	openAiClient := openai.NewClient(env.OpenAiApiKey)
-	respp, err := openAiClient.CreateChatCompletion(
-		context.Background(),
-		openai.ChatCompletionRequest{
-			Model: openai.GPT3Dot5Turbo,
-			Messages: []openai.ChatCompletionMessage{
-				{
-					Role:    openai.ChatMessageRoleUser,
-					Content: "Hello!",
-				},
-			},
-		},
-	)
 
+	twilioRestClient := twilio.NewRestClientWithParams(twilio.ClientParams{
+		Username: env.TwilioAccountSid,
+		Password: env.TwilioAuthToken,
+	})
+
+	prompter := prompt.NewOpenAiPrompter(&prompt.NewOpenAiPrompterParams{
+		Client: openAiClient,
+	})
+
+	publisher := publish.NewTwilioPublisher(&publish.NewTwilioPublisherParams{
+		Client:   twilioRestClient,
+		SendTo:   env.TwilioSendTo,
+		SendFrom: env.TwilioSendFrom,
+	})
+
+	res, err := prompter.Prompt("Hello!")
 	if err != nil {
 		fmt.Printf("ChatCompletion error: %v\n", err)
 		return
 	}
 
-	msg := respp.Choices[0].Message.Content
-
-	client := twilio.NewRestClientWithParams(twilio.ClientParams{
-		Username: env.TwilioAccountSid,
-		Password: env.TwilioAuthToken,
-	})
-
-	params := &twilioApi.CreateMessageParams{}
-	to := fmt.Sprintf("whatsapp:%s", env.TwilioSendTo)
-	params.SetTo(to)
-	from := fmt.Sprintf("whatsapp:%s", env.TwilioSendFrom)
-	params.SetFrom(from)
-	params.SetBody(msg)
-
-	resp, err := client.Api.CreateMessage(params)
+	err = publisher.Publish(res)
 	if err != nil {
 		fmt.Println("Error sending message: " + err.Error())
-	} else {
-		response, _ := json.Marshal(*resp)
-		fmt.Println("Response: " + string(response))
 	}
 }
