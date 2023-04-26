@@ -31,6 +31,7 @@ func NewTwilioSubscriber(params *NewTwilioSubscriberParams) *twilioSubscriber {
 	}
 }
 
+// @TODO: return struct with errs?
 func (s twilioSubscriber) Subscribe() (<-chan string, error) {
 	go func() {
 		http.HandleFunc("/", s.onWebhook)
