@@ -1,5 +1,5 @@
 package subscribe
 
 type Subscriber interface {
-	Subscribe() error
+	Subscribe() (<-chan string, error)
 }

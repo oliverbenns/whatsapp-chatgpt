@@ -1,52 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"os"
-
+	"github.com/oliverbenns/whatsapp-chatgpt/internal/env"
 	"github.com/oliverbenns/whatsapp-chatgpt/internal/prompt"
 	"github.com/oliverbenns/whatsapp-chatgpt/internal/publish"
+	"github.com/oliverbenns/whatsapp-chatgpt/internal/service"
+	"github.com/oliverbenns/whatsapp-chatgpt/internal/subscribe"
 	"github.com/sashabaranov/go-openai"
 	"github.com/twilio/twilio-go"
 )
 
-type Env struct {
-	TwilioAccountSid string
-	TwilioAuthToken  string
-	TwilioSendFrom   string
-	TwilioSendTo     string
-	OpenAiApiKey     string
-}
-
-func GetEnv() (*Env, error) {
-	env := &Env{
-		TwilioAccountSid: os.Getenv("TWILIO_ACCOUNT_SID"),
-		TwilioAuthToken:  os.Getenv("TWILIO_AUTH_TOKEN"),
-		TwilioSendFrom:   os.Getenv("TWILIO_SEND_FROM"),
-		TwilioSendTo:     os.Getenv("TWILIO_SEND_TO"),
-		OpenAiApiKey:     os.Getenv("OPENAI_API_KEY"),
-	}
-
-	invalid := env.TwilioAccountSid == "" || env.TwilioAuthToken == "" || env.TwilioSendFrom == "" || env.TwilioSendTo == "" || env.OpenAiApiKey == ""
-
-	if invalid {
-		return nil, fmt.Errorf("missing credentials")
-	}
-
-	return env, nil
-}
-
 func main() {
-	env, err := GetEnv()
+	env, err := env.GetEnv()
 	if err != nil {
 		panic(err)
 	}
 
 	openAiClient := openai.NewClient(env.OpenAiApiKey)
 
-	twilioRestClient := twilio.NewRestClientWithParams(twilio.ClientParams{
+	twilioClient := twilio.NewRestClientWithParams(twilio.ClientParams{
 		Username: env.TwilioAccountSid,
 		Password: env.TwilioAuthToken,
+	})
+
+	subscriber := subscribe.NewTwilioSubscriber(&subscribe.NewTwilioSubscriberParams{
+		Client: twilioClient,
+		// yes, invert
+		SendTo:   env.TwilioSendFrom,
+		SendFrom: env.TwilioSendTo,
 	})
 
 	prompter := prompt.NewOpenAiPrompter(&prompt.NewOpenAiPrompterParams{
@@ -54,19 +35,16 @@ func main() {
 	})
 
 	publisher := publish.NewTwilioPublisher(&publish.NewTwilioPublisherParams{
-		Client:   twilioRestClient,
+		Client:   twilioClient,
 		SendTo:   env.TwilioSendTo,
 		SendFrom: env.TwilioSendFrom,
 	})
 
-	res, err := prompter.Prompt("Hello!")
-	if err != nil {
-		fmt.Printf("ChatCompletion error: %v\n", err)
-		return
-	}
+	svc := service.NewService(&service.NewServiceParams{
+		Subscriber: subscriber,
+		Publisher:  publisher,
+		Prompter:   prompter,
+	})
 
-	err = publisher.Publish(res)
-	if err != nil {
-		fmt.Println("Error sending message: " + err.Error())
-	}
+	<-svc.Start()
 }
