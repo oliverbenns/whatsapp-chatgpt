@@ -1,5 +1,11 @@
 # Whatsapp ChatGPT
 
+![Whatsapp conversation with ChatGPT](video.mp4)
+
+[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
+
+[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/oliverbenns/whatsapp-chatgpt/tree/main)
+
 ## Getting started
 
 The prerequisites to running this applicaton are to have setup:
@@ -26,13 +32,9 @@ Get the following variables at these locations:
 
 ### Deploying the app
 
-After getting the correct environment variables, click one of the buttons below and input them when required. Alternatively you may build this docker image and push it to your hosting provider of choice.
+After getting the correct environment variables, click one of the buttons above and input them when required. Alternatively you may build this docker image and push it to your hosting provider of choice.
 
 In order to trigger the messages coming back, you must set the webhook url in Twilio with the correct path. You can set the webhook through the sandbox here: https://console.twilio.com/us1/develop/sms/try-it-out/whatsapp-learn. Examples of these are:
 
 - `https://whatsapp-chatgpt-xxxxx.ondigitalocean.app/webhooks/twilio`
 - `https://whatsapp-chatgpt-xxxxxxxxxx-uc.a.run.app/webhooks/twilio`
-
-[![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
-
-[![Deploy to DO](https://www.deploytodo.com/do-btn-blue.svg)](https://cloud.digitalocean.com/apps/new?repo=https://github.com/oliverbenns/whatsapp-chatgpt/tree/main)
