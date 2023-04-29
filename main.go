@@ -8,12 +8,18 @@ import (
 	"github.com/oliverbenns/whatsapp-chatgpt/internal/subscribe"
 	"github.com/sashabaranov/go-openai"
 	"github.com/twilio/twilio-go"
+	"go.uber.org/zap"
 )
 
 func main() {
-	env, err := env.GetEnv()
+	log, err := zap.NewProduction()
 	if err != nil {
 		panic(err)
+	}
+
+	env, err := env.GetEnv()
+	if err != nil {
+		log.Fatal("could not get env", zap.Error(err))
 	}
 
 	openAiClient := openai.NewClient(env.OpenAiApiKey)
@@ -26,8 +32,9 @@ func main() {
 	subscriber := subscribe.NewTwilioSubscriber(&subscribe.NewTwilioSubscriberParams{
 		Client: twilioClient,
 		// yes, invert
-		SendTo:   env.TwilioSendFrom,
-		SendFrom: env.TwilioSendTo,
+		SendTo:     env.TwilioSendFrom,
+		SendFrom:   env.TwilioSendTo,
+		ServerPath: "/webhooks/twilio",
 	})
 
 	prompter := prompt.NewOpenAiPrompter(&prompt.NewOpenAiPrompterParams{
@@ -46,5 +53,10 @@ func main() {
 		Prompter:   prompter,
 	})
 
-	<-svc.Start()
+	log.Info("starting service")
+	err = svc.Start()
+	if err != nil {
+		log.Fatal("service error", zap.Error(err))
+
+	}
 }

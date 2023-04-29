@@ -28,32 +28,51 @@ func NewService(params *NewServiceParams) *Service {
 	}
 }
 
-func (s *Service) Start() <-chan bool {
-	done := make(chan bool)
-	msgs, err := s.subscriber.Subscribe()
-	if err != nil {
-		fmt.Printf("Subscribe error: %v\n", err)
-		go func() { done <- true }()
-		return done
-	}
+func (s *Service) Start() error {
+	msgs, errs := s.subscriber.Subscribe()
 
 	for {
 		select {
 		case msg := <-msgs:
-			s.processMsg(msg)
+			err := s.processMsg(msg)
+			if err != nil {
+				return fmt.Errorf("could not process msg: %v", err)
+			}
+
+		case err := <-errs:
+			errProcess := s.processErr(err)
+			if err != nil {
+				return fmt.Errorf("could not process err: %v", errProcess)
+			}
+
 		}
 	}
 }
 
-func (s *Service) processMsg(msg string) {
+// @TODO: Lock and only process 1 msg at once
+func (s *Service) processMsg(msg string) error {
 	res, err := s.prompter.Prompt(msg)
+
+	var msgToPublish string
 	if err != nil {
-		fmt.Printf("prompt error: %v\n", err)
-		return
+		msgToPublish = err.Error()
+	} else {
+		msgToPublish = res
 	}
 
-	err = s.publisher.Publish(res)
+	err = s.publisher.Publish(msgToPublish)
 	if err != nil {
-		fmt.Println("Error sending message: " + err.Error())
+		return fmt.Errorf("could not publish msg: %v", err)
 	}
+
+	return nil
+}
+
+func (s *Service) processErr(err error) error {
+	errPublish := s.publisher.Publish(err.Error())
+	if errPublish != nil {
+		return fmt.Errorf("could not publish err: %v", errPublish)
+	}
+
+	return nil
 }

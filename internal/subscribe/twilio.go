@@ -1,7 +1,7 @@
 package subscribe
 
 import (
-	"log"
+	"fmt"
 	"net/http"
 
 	"github.com/gorilla/schema"
@@ -10,43 +10,49 @@ import (
 )
 
 type twilioSubscriber struct {
-	client   *twilio.RestClient
-	sendFrom string
-	sendTo   string
-	msgs     chan string
+	client     *twilio.RestClient
+	sendFrom   string
+	sendTo     string
+	serverPath string
+	msgs       chan string
+	errs       chan error
 }
 
 type NewTwilioSubscriberParams struct {
-	Client   *twilio.RestClient
-	SendFrom string
-	SendTo   string
+	Client     *twilio.RestClient
+	SendFrom   string
+	SendTo     string
+	ServerPath string
 }
 
 func NewTwilioSubscriber(params *NewTwilioSubscriberParams) *twilioSubscriber {
 	return &twilioSubscriber{
-		client:   params.Client,
-		sendFrom: params.SendFrom,
-		sendTo:   params.SendTo,
-		msgs:     make(chan string),
+		client:     params.Client,
+		sendFrom:   params.SendFrom,
+		sendTo:     params.SendTo,
+		serverPath: params.ServerPath,
+		msgs:       make(chan string),
+		errs:       make(chan error),
 	}
 }
 
-// @TODO: return struct with errs?
-func (s twilioSubscriber) Subscribe() (<-chan string, error) {
+func (s twilioSubscriber) Subscribe() (<-chan string, <-chan error) {
 	go func() {
-		http.HandleFunc("/", s.onWebhook)
-		// @TODO: err handle
-		http.ListenAndServe(":8080", nil)
+		http.HandleFunc(s.serverPath, s.onWebhook)
+		err := http.ListenAndServe(":8080", nil)
+		if err != nil {
+			s.errs <- err
+		}
 	}()
 
-	return s.msgs, nil
+	return s.msgs, s.errs
 }
 
 func (s twilioSubscriber) onWebhook(w http.ResponseWriter, r *http.Request) {
 	// @TODO: validate req
 	msg, err := s.parseRequest(r)
 	if err != nil {
-		log.Printf("an error occurred: %v", err)
+		s.errs <- fmt.Errorf("could not parse request: %v", err)
 		return
 	}
 
