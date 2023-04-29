@@ -10,36 +10,43 @@ import (
 )
 
 type twilioSubscriber struct {
-	client     *twilio.RestClient
-	sendFrom   string
-	sendTo     string
-	serverPath string
-	msgs       chan string
-	errs       chan error
+	client      *twilio.RestClient
+	sendFrom    string
+	sendTo      string
+	webhookPath string
+	webhookPort int
+	msgs        chan string
+	errs        chan error
 }
 
 type NewTwilioSubscriberParams struct {
-	Client     *twilio.RestClient
-	SendFrom   string
-	SendTo     string
-	ServerPath string
+	Client      *twilio.RestClient
+	SendFrom    string
+	SendTo      string
+	WebhookPath string
+	WebhookPort int
 }
 
 func NewTwilioSubscriber(params *NewTwilioSubscriberParams) *twilioSubscriber {
 	return &twilioSubscriber{
-		client:     params.Client,
-		sendFrom:   params.SendFrom,
-		sendTo:     params.SendTo,
-		serverPath: params.ServerPath,
-		msgs:       make(chan string),
-		errs:       make(chan error),
+		client:      params.Client,
+		sendFrom:    params.SendFrom,
+		sendTo:      params.SendTo,
+		webhookPath: params.WebhookPath,
+		webhookPort: params.WebhookPort,
+		msgs:        make(chan string),
+		errs:        make(chan error),
 	}
 }
 
 func (s twilioSubscriber) Subscribe() (<-chan string, <-chan error) {
 	go func() {
-		http.HandleFunc(s.serverPath, s.onWebhook)
-		err := http.ListenAndServe(":8080", nil)
+		path := s.webhookPath
+		addr := fmt.Sprintf(":%d", s.webhookPort)
+
+		http.HandleFunc(path, s.onWebhook)
+
+		err := http.ListenAndServe(addr, nil)
 		if err != nil {
 			s.errs <- err
 		}

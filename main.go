@@ -32,9 +32,10 @@ func main() {
 	subscriber := subscribe.NewTwilioSubscriber(&subscribe.NewTwilioSubscriberParams{
 		Client: twilioClient,
 		// yes, invert
-		SendTo:     env.TwilioSendFrom,
-		SendFrom:   env.TwilioSendTo,
-		ServerPath: "/webhooks/twilio",
+		SendTo:      env.TwilioSendFrom,
+		SendFrom:    env.TwilioSendTo,
+		WebhookPort: 8080,
+		WebhookPath: "/webhooks/twilio",
 	})
 
 	prompter := prompt.NewOpenAiPrompter(&prompt.NewOpenAiPrompterParams{
