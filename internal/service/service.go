@@ -49,7 +49,6 @@ func (s *Service) Start() error {
 	}
 }
 
-// @TODO: Lock and only process 1 msg at once
 func (s *Service) processMsg(msg string) error {
 	res, err := s.prompter.Prompt(msg)
 
