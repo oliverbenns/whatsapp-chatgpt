@@ -59,7 +59,7 @@ func (s twilioSubscriber) onWebhook(w http.ResponseWriter, r *http.Request) {
 	// @TODO: validate req
 	msg, err := s.parseRequest(r)
 	if err != nil {
-		s.errs <- fmt.Errorf("could not parse request: %v", err)
+		s.errs <- fmt.Errorf("could not parse request: %w", err)
 		return
 	}
 

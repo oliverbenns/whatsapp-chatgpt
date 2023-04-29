@@ -36,13 +36,13 @@ func (s *Service) Start() error {
 		case msg := <-msgs:
 			err := s.processMsg(msg)
 			if err != nil {
-				return fmt.Errorf("could not process msg: %v", err)
+				return fmt.Errorf("could not process msg: %w", err)
 			}
 
 		case err := <-errs:
 			errProcess := s.processErr(err)
-			if err != nil {
-				return fmt.Errorf("could not process err: %v", errProcess)
+			if errProcess != nil {
+				return fmt.Errorf("could not process err: %w", errProcess)
 			}
 
 		}
@@ -62,7 +62,7 @@ func (s *Service) processMsg(msg string) error {
 
 	err = s.publisher.Publish(msgToPublish)
 	if err != nil {
-		return fmt.Errorf("could not publish msg: %v", err)
+		return fmt.Errorf("could not publish msg: %w", err)
 	}
 
 	return nil
@@ -71,7 +71,7 @@ func (s *Service) processMsg(msg string) error {
 func (s *Service) processErr(err error) error {
 	errPublish := s.publisher.Publish(err.Error())
 	if errPublish != nil {
-		return fmt.Errorf("could not publish err: %v", errPublish)
+		return fmt.Errorf("could not publish err: %w", errPublish)
 	}
 
 	return nil
