@@ -1,0 +1,9 @@
+{
+	"env": {
+		"TWILIO_ACCOUNT_SID": {},
+		"TWILIO_AUTH_TOKEN": {},
+		"TWILIO_SEND_FROM": {},
+		"TWILIO_SEND_TO": {},
+		"OPENAI_KEY": {}
+	}
+}
