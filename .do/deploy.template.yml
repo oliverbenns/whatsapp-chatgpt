@@ -8,10 +8,15 @@ spec:
       name: whatsapp-chatgpt
       envs:
         - key: TWILIO_ACCOUNT_SID
+          scope: RUN_TIME
           type: SECRET
         - key: TWILIO_AUTH_TOKEN
+          scope: RUN_TIME
           type: SECRET
         - key: TWILIO_SEND_FROM
+          scope: RUN_TIME
         - key: TWILIO_SEND_TO
+          scope: RUN_TIME
         - key: OPENAI_API_KEY
+          scope: RUN_TIME
           type: SECRET
