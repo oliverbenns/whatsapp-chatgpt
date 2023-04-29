@@ -1,0 +1,13 @@
+services:
+  whatsapp-chatgpt:
+    image: whatsapp-chatgpt
+    build:
+      context: .
+    ports:
+      - 8080:8080
+    environment:
+      TWILIO_ACCOUNT_SID: ${TWILIO_ACCOUNT_SID}
+      TWILIO_AUTH_TOKEN: ${TWILIO_AUTH_TOKEN}
+      TWILIO_SEND_FROM: ${TWILIO_SEND_FROM}
+      TWILIO_SEND_TO: ${TWILIO_SEND_TO}
+      OPENAI_API_KEY: ${OPENAI_API_KEY}
