@@ -1,6 +1,6 @@
 # Whatsapp ChatGPT
 
-![Whatsapp conversation with ChatGPT](video.mp4)
+![](image.gif)
 
 [![Run on Google Cloud](https://deploy.cloud.run/button.svg)](https://deploy.cloud.run)
 
