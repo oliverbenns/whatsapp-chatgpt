@@ -13,8 +13,6 @@ The prerequisites to running this applicaton are to have setup:
 - A free Twilio account (with option to pay if preferred).
 - An OpenAI account with billing information provided.
 
-After setting up a Twilio
-
 ### Environment variables
 
 Get the following variables at these locations:
