@@ -1,6 +1,6 @@
-# Whatsapp ChatGPT
+# WhatsApp ChatGPT
 
-A service that connects Whatsapp to ChatGPT with the help of Twilio.
+A service that connects WhatsApp to ChatGPT with the help of Twilio.
 
 ![](image.gif)
 
